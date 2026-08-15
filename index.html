@@ -6,16 +6,16 @@
     <title>嘟嘟市轨道交通线网图查看中心</title>
     <style>
         :root {
-            --primary: #8E7CC3;          /* 基准紫色（从#E8E6F0衍生，保证对比度） */
-            --primary-light: #E8E6F0;    /* 基准浅紫色，用于背景/浅色块 */
-            --primary-dark: #7A68B0;     /* 深紫色，用于悬停/强调 */
+            --primary: #8E7CC3;
+            --primary-light: #E8E6F0;
+            --primary-dark: #7A68B0;
             --accent: #A99BD8;
             --accent-light: #EDEBF7;
             --danger: #C62828;
             --danger-light: #FFEBEE;
             --success: #7A68B0;
             --success-light: #EDEBF7;
-            --bg: #F5F3FA;               /* 页面背景带紫色调 */
+            --bg: #F5F3FA;
             --card-bg: #FFFFFF;
             --text: #2D2A3A;
             --text-secondary: #5A5568;
@@ -150,6 +150,11 @@
         }
         .directory-dropdown.active {
             display: block;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .directory-item {
             display: flex;
@@ -160,7 +165,7 @@
             font-weight: 500;
             color: var(--text);
             text-decoration: none;
-            transition: background 0.2s;
+            transition: background 0.2s, color 0.2s;
         }
         .directory-item:hover {
             background: var(--primary-light);
@@ -253,6 +258,31 @@
             font-size: 0.95rem;
             color: var(--text-secondary);
             font-weight: 400;
+        }
+        /* 使用说明书入口（左对齐） */
+        .manual-link {
+            text-align: left;
+            margin-top: 10px;
+        }
+        .btn-manual {
+            background: transparent;
+            border: 1.5px solid var(--primary);
+            color: var(--primary-dark);
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-manual:hover {
+            background: var(--primary-light);
+            border-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.2);
         }
 
         /* 主卡片 */
@@ -545,7 +575,7 @@
             background: var(--danger);
         }
 
-        /* 登录模态框 */
+        /* 登录与说明书模态框通用样式 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -578,14 +608,8 @@
             animation: modalSlideIn 0.3s ease;
         }
         @keyframes modalSlideIn {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         .modal-close {
             position: absolute;
@@ -619,6 +643,26 @@
             align-items: center;
             gap: 8px;
         }
+        .modal-body {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+        .modal-body ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+        .modal-body .update-note {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        /* 登录表单专用 */
         .form-group-login {
             margin-bottom: 16px;
         }
@@ -758,7 +802,7 @@
                 justify-content: center;
             }
             .navbar .nav-brand span {
-                display: none; /* 小屏幕隐藏部分文字，保留logo */
+                display: none;
             }
             .directory-btn {
                 padding: 6px 10px;
@@ -775,17 +819,7 @@
             <span class="nav-logo">🗺️</span>
             <span>嘟嘟市轨道交通|线网图查看器</span>
         </a>
-        <div class="nav-actions" id="navActions">
-            <!-- 其他功能按钮（位于管理员登录左侧） -->
-            <div class="nav-directory">
-                <button class="directory-btn" onclick="toggleDirectory()">📂 其他功能</button>
-                <div class="directory-dropdown" id="directoryDropdown">
-                    <a href="#" class="directory-item" onclick="closeDirectory()">🗺️ 线网图查看器</a>
-                    <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🎫 票价查询</a>
-                </div>
-            </div>
-            <!-- 管理员登录/用户信息将由JS动态渲染 -->
-        </div>
+        <div class="nav-actions" id="navActions"></div>
     </nav>
 
     <!-- 登录模态框 -->
@@ -816,6 +850,25 @@
         </div>
     </div>
 
+    <!-- 使用说明书模态框 -->
+    <div class="modal-overlay" id="manualModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeManualModal()">&times;</button>
+            <div class="modal-title">📘 使用说明书</div>
+            <div class="modal-body">
+                <p>欢迎使用嘟嘟市轨道交通线网图查看中心，以下为使用说明：</p>
+                <ul>
+                    <li><strong>切换地图版本：</strong>点击上方“🚇 嘟嘟版”或“🚈 尖角版”标签可切换不同的线网图。</li>
+                    <li><strong>缩放与移动：</strong>使用鼠标滚轮或双指手势进行放大/缩小，拖拽图片可移动查看细节。</li>
+                    <li><strong>重置视图：</strong>点击“↺ 重置”按钮可将地图恢复至初始大小和位置。</li>
+                    <li><strong>下载图片：</strong>点击“下载”按钮可保存当前线网图到本地。</li>
+                    <li><strong>刷新：</strong>点击“刷新”按钮重新加载最新图片。</li>
+                </ul>
+                <div class="update-note">📅 本说明更新于 2026年8月16日</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="map-toast" id="mapToast"></div>
 
@@ -825,6 +878,9 @@
             <div class="header-logo"></div>
             <h1>嘟嘟市轨道交通线网图查看中心</h1>
             <p class="subtitle">嘟尖两市通用 · 支持高清查看 · 可下载保存</p>
+            <div class="manual-link">
+                <button class="btn-manual" onclick="openManualModal()">📘 使用说明书</button>
+            </div>
         </div>
 
         <!-- 主卡片 -->
@@ -876,13 +932,32 @@
             const dropdown = document.getElementById('directoryDropdown');
             dropdown.classList.remove('active');
         }
-        // 点击页面其他区域关闭目录
         document.addEventListener('click', function(e) {
             const directory = document.querySelector('.nav-directory');
-            if (!directory.contains(e.target)) {
+            if (directory && !directory.contains(e.target)) {
                 closeDirectory();
             }
         });
+
+        // ==================== 模态框函数 ====================
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+            const cached = localStorage.getItem('cached_github_token');
+            if (cached) {
+                document.getElementById('githubToken').value = cached;
+                document.getElementById('rememberToken').checked = true;
+            }
+        }
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginError').style.display = 'none';
+        }
+        function openManualModal() {
+            document.getElementById('manualModal').classList.add('active');
+        }
+        function closeManualModal() {
+            document.getElementById('manualModal').classList.remove('active');
+        }
 
         // ==================== 登录管理 ====================
         function checkLoginStatus() {
@@ -891,14 +966,13 @@
 
         function renderNavbar() {
             const navActions = document.getElementById('navActions');
-            // 保留其他功能按钮，在其后添加登录/用户信息
             if (checkLoginStatus()) {
                 navActions.innerHTML = `
                     <div class="nav-directory">
                         <button class="directory-btn" onclick="toggleDirectory()">📂 其他功能</button>
                         <div class="directory-dropdown" id="directoryDropdown">
                             <a href="#" class="directory-item" onclick="closeDirectory()">🗺️ 线网图查看器</a>
-                            <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🎫 票价查询</a>
+                            <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🚇 票价查询</a>
                         </div>
                     </div>
                     <div class="nav-user-info"><span class="user-icon">👤</span><span>管理员</span></div>
@@ -910,7 +984,7 @@
                         <button class="directory-btn" onclick="toggleDirectory()">📂 其他功能</button>
                         <div class="directory-dropdown" id="directoryDropdown">
                             <a href="#" class="directory-item" onclick="closeDirectory()">🗺️ 线网图查看器</a>
-                            <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🎫 票价查询</a>
+                            <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🚇 票价查询</a>
                         </div>
                     </div>
                     <button class="btn-login" onclick="openLoginModal()">🔐 管理员登录</button>
@@ -926,20 +1000,8 @@
             if (btnDelete) btnDelete.style.display = isAdmin ? 'flex' : 'none';
         }
 
-        window.openLoginModal = function() {
-            document.getElementById('loginModal').classList.add('active');
-            const cached = localStorage.getItem('cached_github_token');
-            if (cached) {
-                document.getElementById('githubToken').value = cached;
-                document.getElementById('rememberToken').checked = true;
-            }
-        };
-
-        window.closeLoginModal = function() {
-            document.getElementById('loginModal').classList.remove('active');
-            document.getElementById('loginError').style.display = 'none';
-        };
-
+        window.openLoginModal = openLoginModal;
+        window.closeLoginModal = closeLoginModal;
         window.handleLogin = function(e) {
             e.preventDefault();
             const u = document.getElementById('loginUsername').value.trim();
@@ -966,7 +1028,6 @@
                 document.getElementById('loginError').style.display = 'block';
             }
         };
-
         window.logout = function() {
             sessionStorage.removeItem('dudu_admin');
             sessionStorage.removeItem('github_token');
@@ -980,7 +1041,6 @@
 
         // ==================== Toast 提示 ====================
         let toastTimer = null;
-
         function showToast(message, type) {
             const toast = document.getElementById('mapToast');
             toast.textContent = message;
@@ -1062,10 +1122,8 @@
         // ==================== 地图状态管理 ====================
         let currentMapVersion = 'dudu';
         const mapState = {
-            dudu: { scale: 1, tx: 0, ty: 0, dragging: false, startX: 0, startY: 0, prevX: 0, prevY: 0, pinchDist: 0,
-                pinchScale: 1, initScale: 1 },
-            jianjiao: { scale: 1, tx: 0, ty: 0, dragging: false, startX: 0, startY: 0, prevX: 0, prevY: 0, pinchDist: 0,
-                pinchScale: 1, initScale: 1 }
+            dudu: { scale: 1, tx: 0, ty: 0, dragging: false, startX: 0, startY: 0, prevX: 0, prevY: 0, pinchDist: 0, pinchScale: 1, initScale: 1 },
+            jianjiao: { scale: 1, tx: 0, ty: 0, dragging: false, startX: 0, startY: 0, prevX: 0, prevY: 0, pinchDist: 0, pinchScale: 1, initScale: 1 }
         };
 
         function getCurrentSuf() {
@@ -1102,8 +1160,7 @@
         }
 
         function getPos(e) {
-            return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e
-                .clientY };
+            return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
         }
 
         let activeDrag = false;
@@ -1201,8 +1258,7 @@
                 const inner = document.createElement('div');
                 inner.className = 'map-image-inner';
                 inner.id = 'mapInner';
-                inner.style.cssText =
-                    'position:absolute; top:50%; left:50%; transform-origin:center; cursor:grab; user-select:none; -webkit-user-drag:none; will-change:transform;';
+                inner.style.cssText = 'position:absolute; top:50%; left:50%; transform-origin:center; cursor:grab; user-select:none; -webkit-user-drag:none; will-change:transform;';
                 const img = document.createElement('img');
                 img.id = 'mapImg';
                 img.draggable = false;
@@ -1217,28 +1273,13 @@
                 wrapper.addEventListener('touchstart', startDrag, { passive: false });
                 wrapper.addEventListener('wheel', handleWheel, { passive: false });
 
-                document.getElementById('btnZoomIn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    zoomMap(0.2);
-                });
-                document.getElementById('btnZoomOut').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    zoomMap(-0.2);
-                });
-                document.getElementById('btnReset').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    resetZoom();
-                });
-                document.getElementById('btnDownload').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    downloadMapImage();
-                });
+                document.getElementById('btnZoomIn').addEventListener('click', (e) => { e.stopPropagation(); zoomMap(0.2); });
+                document.getElementById('btnZoomOut').addEventListener('click', (e) => { e.stopPropagation(); zoomMap(-0.2); });
+                document.getElementById('btnReset').addEventListener('click', (e) => { e.stopPropagation(); resetZoom(); });
+                document.getElementById('btnDownload').addEventListener('click', (e) => { e.stopPropagation(); downloadMapImage(); });
                 const btnDelete = document.getElementById('btnDelete');
                 if (btnDelete) {
-                    btnDelete.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        deleteCurrentMap();
-                    });
+                    btnDelete.addEventListener('click', (e) => { e.stopPropagation(); deleteCurrentMap(); });
                 }
 
                 img.onload = () => {
@@ -1270,7 +1311,6 @@
             updateUploadButtonVisibility();
         }
 
-        // ==================== 地图操作函数 ====================
         function downloadMapImage() {
             const img = document.getElementById('mapImg');
             if (!img || !img.src || img.src === window.location.href) {
@@ -1346,9 +1386,13 @@
         // ==================== 事件处理 ====================
         document.addEventListener('click', e => {
             if (e.target === document.getElementById('loginModal')) closeLoginModal();
+            if (e.target === document.getElementById('manualModal')) closeManualModal();
         });
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeLoginModal();
+            if (e.key === 'Escape') {
+                closeLoginModal();
+                closeManualModal();
+            }
         });
 
         let resizeTimeout = null;
@@ -1387,6 +1431,8 @@
         window.deleteCurrentMap = deleteCurrentMap;
         window.openLoginModal = openLoginModal;
         window.closeLoginModal = closeLoginModal;
+        window.openManualModal = openManualModal;
+        window.closeManualModal = closeManualModal;
         window.handleLogin = handleLogin;
         window.logout = logout;
         window.checkLoginStatus = checkLoginStatus;
