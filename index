@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>嘟嘟市轨道交通线网图查看中心</title>
+    <style>
+        :root {
+            --primary: #8E7CC3;          /* 基准紫色（从#E8E6F0衍生，保证对比度） */
+            --primary-light: #E8E6F0;    /* 基准浅紫色，用于背景/浅色块 */
+            --primary-dark: #7A68B0;     /* 深紫色，用于悬停/强调 */
+            --accent: #A99BD8;
+            --accent-light: #EDEBF7;
+            --danger: #C62828;
+            --danger-light: #FFEBEE;
+            --success: #7A68B0;
+            --success-light: #EDEBF7;
+            --bg: #F5F3FA;               /* 页面背景带紫色调 */
+            --card-bg: #FFFFFF;
+            --text: #2D2A3A;
+            --text-secondary: #5A5568;
+            --border: #D9D4E8;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+            --radius: 20px;
+            --radius-sm: 12px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-top: 70px;
+            -webkit-overflow-scrolling: touch;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -220px;
+            right: -180px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(142, 124, 195, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -160px;
+            left: -130px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(169, 155, 216, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 100;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+        }
+        .navbar .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .navbar .nav-brand .nav-logo {
+            width: 38px;
+            height: 38px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+        }
+        .nav-directory {
+            position: relative;
+        }
+        .directory-btn {
+            background: var(--primary-light);
+            border: 1.5px solid var(--primary);
+            color: var(--primary-dark);
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .directory-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+        }
+        .directory-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            min-width: 200px;
+            padding: 8px 0;
+            display: none;
+            z-index: 200;
+        }
+        .directory-dropdown.active {
+            display: block;
+        }
+        .directory-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .directory-item:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        .nav-user-info {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .nav-user-info .user-icon {
+            font-size: 1.3rem;
+        }
+        .btn-login {
+            background: var(--primary);
+            color: #fff;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+        }
+        .btn-login:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(142, 124, 195, 0.4);
+        }
+        .btn-logout {
+            background: transparent;
+            color: var(--danger);
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            border: 1.5px solid var(--danger);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .btn-logout:hover {
+            background: var(--danger-light);
+            border-color: var(--danger);
+            transform: translateY(-1px);
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 20px 40px;
+            position: relative;
+            z-index: 1;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .header .header-logo {
+            display: inline-block;
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            border-radius: 50%;
+            margin-bottom: 12px;
+            position: relative;
+            box-shadow: 0 4px 16px rgba(142, 124, 195, 0.3);
+        }
+        .header .header-logo::after {
+            content: '🗺️';
+            font-size: 30px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+        .header .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* 主卡片 */
+        .main-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            margin-bottom: 24px;
+        }
+        .main-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* 标签切换 */
+        .map-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #F0EFF5;
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .map-tab {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 30px;
+            transition: var(--transition);
+            position: relative;
+            white-space: nowrap;
+        }
+        .map-tab:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+        .map-tab.active {
+            color: #fff;
+            background: var(--primary);
+            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.35);
+        }
+        .map-tab.active:hover {
+            background: var(--primary-dark);
+        }
+
+        /* 刷新按钮行 */
+        .map-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .map-toolbar .hint-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            opacity: 0.9;
+        }
+        .map-toolbar .refresh-btn {
+            font-size: 0.82rem;
+            background: var(--accent-light);
+            border: 1.5px solid var(--accent);
+            color: var(--primary-dark);
+            padding: 6px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .map-toolbar .refresh-btn:hover {
+            background: var(--accent);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(169, 155, 216, 0.3);
+        }
+
+        /* 地图容器 */
+        .map-container {
+            text-align: center;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #FAF9FC;
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            border: 1.5px dashed var(--border);
+            transition: var(--transition);
+        }
+        .map-placeholder {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+        .map-placeholder .placeholder-icon {
+            font-size: 3.5rem;
+            opacity: 0.6;
+        }
+        .map-placeholder .placeholder-text {
+            font-weight: 500;
+        }
+
+        /* 地图控制按钮 */
+        .map-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .map-controls button {
+            background: #fff;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 6px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            white-space: nowrap;
+        }
+        .map-controls button:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+            transform: translateY(-1px);
+        }
+        .map-controls button.btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+        .map-controls button.btn-danger:hover {
+            background: var(--danger);
+            color: #fff;
+            border-color: var(--danger);
+            box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3);
+        }
+        .map-controls button svg {
+            width: 15px;
+            height: 15px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        /* 手势提示 */
+        .map-gesture-hint {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+
+        /* 地图图片包装器 */
+        .map-image-wrapper {
+            width: 100%;
+            height: 420px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #fff;
+            touch-action: none;
+            cursor: grab;
+            border: 1px solid #E0DCEB;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.02);
+        }
+        .map-image-wrapper:active {
+            cursor: grabbing;
+        }
+        .map-image-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-drag: none;
+            will-change: transform;
+        }
+        .map-image-inner:active {
+            cursor: grabbing;
+        }
+        .map-image-inner img {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: none;
+            -webkit-user-drag: none;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* 上传按钮区域 */
+        .upload-btn-wrapper {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .upload-btn-wrapper input[type="file"] {
+            display: none;
+        }
+        .upload-btn-wrapper .btn {
+            background: var(--success);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(122, 104, 176, 0.3);
+        }
+        .upload-btn-wrapper .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(122, 104, 176, 0.4);
+        }
+        .upload-btn-wrapper .btn-delete {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1.5px solid #F5C6CB;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .upload-btn-wrapper .btn-delete:hover {
+            background: #F5C6CB;
+            color: #A71D2A;
+            transform: translateY(-1px);
+        }
+        .upload-text {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* Toast 提示 */
+        .map-toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2D2A3A;
+            color: #fff;
+            padding: 12px 26px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .map-toast.success {
+            background: var(--success);
+        }
+        .map-toast.error {
+            background: var(--danger);
+        }
+
+        /* 登录模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: var(--radius);
+            max-width: 480px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 28px 32px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            line-height: 1;
+            transition: color 0.2s;
+            background: #F5F3FA;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            color: var(--danger);
+            background: var(--danger-light);
+        }
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-group-login {
+            margin-bottom: 16px;
+        }
+        .form-group-login label {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        .form-group-login input[type="text"],
+        .form-group-login input[type="password"] {
+            width: 100%;
+            padding: 11px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: var(--text);
+            background: #FAF9FC;
+            transition: var(--transition);
+            outline: none;
+        }
+        .form-group-login input[type="text"]:focus,
+        .form-group-login input[type="password"]:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(142, 124, 195, 0.1);
+        }
+        .login-error {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: none;
+        }
+        .btn-primary {
+            width: 100%;
+            justify-content: center;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            font-size: 0.95rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 18px rgba(142, 124, 195, 0.4);
+            transform: translateY(-2px);
+        }
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .checkbox-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+        .checkbox-row label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            margin: 0;
+        }
+
+        /* 页脚 */
+        .footer-note {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #A0A0B0;
+            margin-top: 20px;
+            letter-spacing: 0.02em;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px 12px 30px;
+            }
+            .main-card {
+                padding: 16px 14px;
+                border-radius: 16px;
+            }
+            .map-image-wrapper {
+                height: 320px;
+            }
+            .navbar {
+                padding: 0 14px;
+                flex-wrap: wrap;
+                height: auto;
+                min-height: 60px;
+            }
+            .navbar .nav-brand {
+                font-size: 0.95rem;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .modal-content {
+                padding: 20px 16px;
+            }
+            .map-tab {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+            .map-controls button {
+                padding: 5px 10px;
+                font-size: 0.72rem;
+            }
+            .nav-actions {
+                gap: 8px;
+            }
+        }
+        @media (max-width: 480px) {
+            .map-image-wrapper {
+                height: 260px;
+            }
+            .map-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .map-toolbar .refresh-btn {
+                justify-content: center;
+            }
+            .navbar .nav-brand span {
+                display: none; /* 小屏幕隐藏部分文字，保留logo */
+            }
+            .directory-btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <a class="nav-brand" href="#">
+            <span class="nav-logo">🗺️</span>
+            <span>嘟嘟市轨道交通|线网图查看器</span>
+        </a>
+        <div class="nav-actions" id="navActions">
+            <!-- 其他功能按钮（位于管理员登录左侧） -->
+            <div class="nav-directory">
+                <button class="directory-btn" onclick="toggleDirectory()">📂 其他功能</button>
+                <div class="directory-dropdown" id="directoryDropdown">
+                    <a href="#" class="directory-item" onclick="closeDirectory()">🗺️ 线网图查看器</a>
+                    <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🎫 票价查询</a>
+                </div>
+            </div>
+            <!-- 管理员登录/用户信息将由JS动态渲染 -->
+        </div>
+    </nav>
+
+    <!-- 登录模态框 -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+            <div class="modal-title">🔐 管理员登录</div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group-login">
+                    <label for="loginUsername">账号</label>
+                    <input type="text" id="loginUsername" required autocomplete="username">
+                </div>
+                <div class="form-group-login">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" required autocomplete="current-password">
+                </div>
+                <div class="form-group-login">
+                    <label for="githubToken">GitHub Token（管理员填写）</label>
+                    <input type="password" id="githubToken" placeholder="输入你的 GitHub Token">
+                </div>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="rememberToken">
+                    <label for="rememberToken">记住 Token</label>
+                </div>
+                <div class="login-error" id="loginError" style="display:none;">账号或密码错误</div>
+                <button type="submit" class="btn-primary">登 录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="map-toast" id="mapToast"></div>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div class="header">
+            <div class="header-logo"></div>
+            <h1>嘟嘟市轨道交通线网图查看中心</h1>
+            <p class="subtitle">嘟尖两市通用 · 支持高清查看 · 可下载保存</p>
+        </div>
+
+        <!-- 主卡片 -->
+        <div class="main-card">
+            <!-- 标签切换 -->
+            <div class="map-tabs">
+                <button class="map-tab active" data-tab="dudu" onclick="switchMapTab('dudu')">🚇 嘟嘟版</button>
+                <button class="map-tab" data-tab="jianjiao" onclick="switchMapTab('jianjiao')">🚈 尖角版</button>
+            </div>
+
+            <!-- 工具栏 -->
+            <div class="map-toolbar">
+                <span class="hint-text">⏳ 图片加载时间较长，请耐心等候</span>
+                <button class="refresh-btn" onclick="refreshCurrentMap()">刷新</button>
+            </div>
+
+            <!-- 地图容器 -->
+            <div class="map-container" id="mapContainer">
+                <span class="map-placeholder">加载中...</span>
+            </div>
+
+            <!-- 上传/删除按钮区域（管理员可见） -->
+            <div class="upload-btn-wrapper" id="uploadWrapper" style="display:none;">
+                <button class="btn" onclick="document.getElementById('mapFileInput').click()">📤 上传新图片</button>
+                <button class="btn-delete" onclick="deleteCurrentMap()">🗑️ 删除图片</button>
+                <span class="upload-text" id="uploadText" style="display:none;">⏳ 上传中...</span>
+                <input type="file" id="mapFileInput" accept="image/*" onchange="handleUpload(event)">
+            </div>
+        </div>
+
+        <p class="footer-note">嘟嘟市轨道交通线网图 · 数据版本 2026.08</p>
+    </div>
+
+    <script>
+        // ==================== 配置常量 ====================
+        const GITHUB_OWNER = 'CommandBlocktt';
+        const GITHUB_REPO = 'ticketing_system';
+        const MAPS_FILE_PATH = 'maps.json';
+        const IMGBB_API_KEY = '2d15022b586dac2e3cf34b4aa9170e31';
+        const ADMIN_USERNAME = 'tntdada123';
+        const ADMIN_PASSWORD = 'uid650949970';
+
+        // ==================== 目录下拉 ====================
+        function toggleDirectory() {
+            const dropdown = document.getElementById('directoryDropdown');
+            dropdown.classList.toggle('active');
+        }
+        function closeDirectory() {
+            const dropdown = document.getElementById('directoryDropdown');
+            dropdown.classList.remove('active');
+        }
+        // 点击页面其他区域关闭目录
+        document.addEventListener('click', function(e) {
+            const directory = document.querySelector('.nav-directory');
+            if (!directory.contains(e.target)) {
+                closeDirectory();
+            }
+        });
+
+        // ==================== 登录管理 ====================
+        function checkLoginStatus() {
+            return sessionStorage.getItem('dudu_admin') === 'true';
+        }
+
+        function renderNavbar() {
+            const navActions = document.getElementById('navActions');
+            // 保留其他功能按钮，在其后添加登录/用户信息
+            if (checkLoginStatus()) {
+                navActions.innerHTML = `
+                    <div class="nav-directory">
+                        <button class="directory-btn" onclick="toggleDirectory()">📂 其他功能</button>
+                        <div class="directory-dropdown" id="directoryDropdown">
+                            <a href="#" class="directory-item" onclick="closeDirectory()">🗺️ 线网图查看器</a>
+                            <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🎫 票价查询</a>
+                        </div>
+                    </div>
+                    <div class="nav-user-info"><span class="user-icon">👤</span><span>管理员</span></div>
+                    <button class="btn-logout" onclick="logout()">退出</button>
+                `;
+            } else {
+                navActions.innerHTML = `
+                    <div class="nav-directory">
+                        <button class="directory-btn" onclick="toggleDirectory()">📂 其他功能</button>
+                        <div class="directory-dropdown" id="directoryDropdown">
+                            <a href="#" class="directory-item" onclick="closeDirectory()">🗺️ 线网图查看器</a>
+                            <a href="https://commandblocktt.github.io/ticketing_system/" class="directory-item" target="_blank" onclick="closeDirectory()">🎫 票价查询</a>
+                        </div>
+                    </div>
+                    <button class="btn-login" onclick="openLoginModal()">🔐 管理员登录</button>
+                `;
+            }
+            updateUploadButtonVisibility();
+        }
+
+        function updateUploadButtonVisibility() {
+            const isAdmin = checkLoginStatus();
+            document.getElementById('uploadWrapper').style.display = isAdmin ? 'flex' : 'none';
+            const btnDelete = document.getElementById('btnDelete');
+            if (btnDelete) btnDelete.style.display = isAdmin ? 'flex' : 'none';
+        }
+
+        window.openLoginModal = function() {
+            document.getElementById('loginModal').classList.add('active');
+            const cached = localStorage.getItem('cached_github_token');
+            if (cached) {
+                document.getElementById('githubToken').value = cached;
+                document.getElementById('rememberToken').checked = true;
+            }
+        };
+
+        window.closeLoginModal = function() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('loginError').style.display = 'none';
+        };
+
+        window.handleLogin = function(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value.trim();
+            let token = document.getElementById('githubToken').value.trim();
+            const remember = document.getElementById('rememberToken').checked;
+            if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
+                if (!token) token = localStorage.getItem('cached_github_token') || '';
+                if (!token) {
+                    alert('请输入 GitHub Token');
+                    return;
+                }
+                sessionStorage.setItem('dudu_admin', 'true');
+                sessionStorage.setItem('github_token', token);
+                if (remember) {
+                    localStorage.setItem('cached_github_token', token);
+                } else {
+                    localStorage.removeItem('cached_github_token');
+                }
+                closeLoginModal();
+                renderNavbar();
+                loadCurrentMap();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        };
+
+        window.logout = function() {
+            sessionStorage.removeItem('dudu_admin');
+            sessionStorage.removeItem('github_token');
+            renderNavbar();
+            loadCurrentMap();
+        };
+
+        function getGitHubToken() {
+            return sessionStorage.getItem('github_token') || localStorage.getItem('cached_github_token') || '';
+        }
+
+        // ==================== Toast 提示 ====================
+        let toastTimer = null;
+
+        function showToast(message, type) {
+            const toast = document.getElementById('mapToast');
+            toast.textContent = message;
+            toast.className = 'map-toast' + (type ? ' ' + type : '');
+            toast.style.opacity = '1';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2500);
+        }
+
+        // ==================== GitHub 读写 ====================
+        async function fetchMapsJSON() {
+            const token = getGitHubToken();
+            const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${MAPS_FILE_PATH}`;
+            if (token) {
+                try {
+                    const r = await fetch(apiUrl, {
+                        headers: { Authorization: `token ${token}` },
+                        cache: 'no-store'
+                    });
+                    if (r.ok) {
+                        const d = await r.json();
+                        return JSON.parse(atob(d.content));
+                    }
+                } catch (e) {}
+            }
+            try {
+                const r = await fetch(apiUrl, { cache: 'no-store' });
+                if (r.ok) {
+                    const d = await r.json();
+                    return JSON.parse(atob(d.content));
+                }
+            } catch (e) {}
+            const rawUrl = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/master/${MAPS_FILE_PATH}?nocache=${Date.now()}`;
+            try {
+                const r = await fetch(rawUrl, { cache: 'no-store' });
+                if (r.ok) return await r.json();
+            } catch (e) {}
+            return { dudu: '', jianjiao: '' };
+        }
+
+        async function updateMapsJSON(version, imageUrl) {
+            const token = getGitHubToken();
+            if (!token) {
+                alert('缺少 GitHub Token，请先登录管理员账号');
+                return false;
+            }
+            const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${MAPS_FILE_PATH}`;
+            try {
+                const getResp = await fetch(apiUrl, {
+                    headers: { Authorization: `token ${token}` }
+                });
+                if (!getResp.ok) throw new Error(`读取文件失败 (${getResp.status})`);
+                const fileData = await getResp.json();
+                const content = JSON.parse(atob(fileData.content));
+                content[version] = imageUrl;
+                const newContent = btoa(JSON.stringify(content, null, 2));
+                const putResp = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `更新${version}线网图`,
+                        content: newContent,
+                        sha: fileData.sha
+                    })
+                });
+                if (!putResp.ok) throw new Error(`更新失败 (${putResp.status})`);
+                return true;
+            } catch (e) {
+                alert('更新出错：' + e.message);
+                return false;
+            }
+        }
+
+        // ==================== 地图状态管理 ====================
+        let currentMapVersion = 'dudu';
+        const mapState = {
+            dudu: { scale: 1, tx: 0, ty: 0, dragging: false, startX: 0, startY: 0, prevX: 0, prevY: 0, pinchDist: 0,
+                pinchScale: 1, initScale: 1 },
+            jianjiao: { scale: 1, tx: 0, ty: 0, dragging: false, startX: 0, startY: 0, prevX: 0, prevY: 0, pinchDist: 0,
+                pinchScale: 1, initScale: 1 }
+        };
+
+        function getCurrentSuf() {
+            return currentMapVersion === 'dudu' ? 'Dudu' : 'Jianjiao';
+        }
+
+        function applyTransform() {
+            const inner = document.getElementById('mapInner');
+            if (!inner) return;
+            const s = mapState[currentMapVersion];
+            inner.style.transform = `translate(calc(-50% + ${s.tx}px), calc(-50% + ${s.ty}px)) scale(${s.scale})`;
+        }
+
+        function zoomMap(d) {
+            mapState[currentMapVersion].scale = Math.max(0.01, mapState[currentMapVersion].scale + d);
+            applyTransform();
+        }
+
+        function resetZoom() {
+            mapState[currentMapVersion].scale = mapState[currentMapVersion].initScale;
+            mapState[currentMapVersion].tx = 0;
+            mapState[currentMapVersion].ty = 0;
+            applyTransform();
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+            zoomMap(e.deltaY > 0 ? -0.2 : 0.2);
+        }
+
+        function getDist(t) {
+            if (t.length < 2) return 0;
+            return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        }
+
+        function getPos(e) {
+            return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e
+                .clientY };
+        }
+
+        let activeDrag = false;
+
+        function startDrag(e) {
+            e.preventDefault();
+            const s = mapState[currentMapVersion];
+            const t = e.touches;
+            if (t && t.length === 2) {
+                s.dragging = false;
+                s.pinchDist = getDist(t);
+                s.pinchScale = s.scale;
+                return;
+            }
+            const p = getPos(e);
+            if (!p) return;
+            s.dragging = true;
+            s.startX = p.x;
+            s.startY = p.y;
+            s.prevX = s.tx;
+            s.prevY = s.ty;
+            activeDrag = true;
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', onDrag, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+            document.addEventListener('touchcancel', stopDrag);
+        }
+
+        function onDrag(e) {
+            const s = mapState[currentMapVersion];
+            const t = e.touches;
+            if (t && t.length === 2) {
+                if (s.pinchDist) {
+                    s.scale = Math.max(0.01, s.pinchScale * (getDist(t) / s.pinchDist));
+                    applyTransform();
+                }
+                return;
+            }
+            if (!s.dragging || !activeDrag) return;
+            e.preventDefault();
+            const p = getPos(e);
+            if (!p) return;
+            s.tx = s.prevX + (p.x - s.startX);
+            s.ty = s.prevY + (p.y - s.startY);
+            applyTransform();
+        }
+
+        function stopDrag() {
+            if (mapState[currentMapVersion]) {
+                mapState[currentMapVersion].dragging = false;
+                mapState[currentMapVersion].pinchDist = 0;
+            }
+            activeDrag = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('touchend', stopDrag);
+            document.removeEventListener('touchcancel', stopDrag);
+        }
+
+        // ==================== 地图显示 ====================
+        function showMapImage(src) {
+            const container = document.getElementById('mapContainer');
+            container.innerHTML = '';
+
+            if (src) {
+                const controlsDiv = document.createElement('div');
+                controlsDiv.className = 'map-controls';
+                controlsDiv.innerHTML = `
+                    <button id="btnZoomIn" title="放大">＋ 放大</button>
+                    <button id="btnZoomOut" title="缩小">－ 缩小</button>
+                    <button id="btnReset" title="重置视图">↺ 重置</button>
+                    <button id="btnDownload" title="下载图片">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12l7 7 7-7"/>
+                            <rect x="3" y="17" width="18" height="3" rx="1" fill="currentColor" stroke="none"/>
+                        </svg>
+                        下载
+                    </button>
+                    <button id="btnDelete" class="btn-danger" title="删除图片" style="display:${checkLoginStatus()?'flex':'none'}">
+                        🗑️ 删除
+                    </button>
+                `;
+                container.appendChild(controlsDiv);
+
+                const hintDiv = document.createElement('div');
+                hintDiv.className = 'map-gesture-hint';
+                hintDiv.textContent = '💡 可使用鼠标滚轮或双指进行放大/缩小，拖拽移动';
+                container.appendChild(hintDiv);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'map-image-wrapper';
+                wrapper.id = 'mapWrapper';
+                const inner = document.createElement('div');
+                inner.className = 'map-image-inner';
+                inner.id = 'mapInner';
+                inner.style.cssText =
+                    'position:absolute; top:50%; left:50%; transform-origin:center; cursor:grab; user-select:none; -webkit-user-drag:none; will-change:transform;';
+                const img = document.createElement('img');
+                img.id = 'mapImg';
+                img.draggable = false;
+                img.style.cssText = 'pointer-events:none; user-select:none; -webkit-user-drag:none;';
+                img.src = src;
+                img.alt = `${currentMapVersion}线网图`;
+                inner.appendChild(img);
+                wrapper.appendChild(inner);
+                container.appendChild(wrapper);
+
+                wrapper.addEventListener('mousedown', startDrag);
+                wrapper.addEventListener('touchstart', startDrag, { passive: false });
+                wrapper.addEventListener('wheel', handleWheel, { passive: false });
+
+                document.getElementById('btnZoomIn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    zoomMap(0.2);
+                });
+                document.getElementById('btnZoomOut').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    zoomMap(-0.2);
+                });
+                document.getElementById('btnReset').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    resetZoom();
+                });
+                document.getElementById('btnDownload').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadMapImage();
+                });
+                const btnDelete = document.getElementById('btnDelete');
+                if (btnDelete) {
+                    btnDelete.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteCurrentMap();
+                    });
+                }
+
+                img.onload = () => {
+                    const natW = img.naturalWidth;
+                    const natH = img.naturalHeight;
+                    if (natW && natH) {
+                        inner.style.width = natW + 'px';
+                        inner.style.height = natH + 'px';
+                        const ww = wrapper.clientWidth;
+                        const wh = wrapper.clientHeight;
+                        const scaleX = ww / natW;
+                        const scaleY = wh / natH;
+                        const initScale = Math.min(scaleX, scaleY, 1);
+                        mapState[currentMapVersion].initScale = initScale;
+                        mapState[currentMapVersion].scale = initScale;
+                        mapState[currentMapVersion].tx = 0;
+                        mapState[currentMapVersion].ty = 0;
+                        applyTransform();
+                    }
+                };
+            } else {
+                container.innerHTML = `
+                    <div class="map-placeholder">
+                        <span class="placeholder-icon">🗺️</span>
+                        <span class="placeholder-text">暂无图片，请管理员上传</span>
+                    </div>
+                `;
+            }
+            updateUploadButtonVisibility();
+        }
+
+        // ==================== 地图操作函数 ====================
+        function downloadMapImage() {
+            const img = document.getElementById('mapImg');
+            if (!img || !img.src || img.src === window.location.href) {
+                showToast('暂无可下载的图片', 'error');
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = `线网图_${currentMapVersion}_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('下载已开始', 'success');
+        }
+
+        async function deleteCurrentMap() {
+            if (!confirm('确定要删除当前线网图吗？此操作不可恢复。')) return;
+            const ok = await updateMapsJSON(currentMapVersion, '');
+            if (ok) {
+                showMapImage('');
+                showToast('✅ 图片已删除', 'success');
+            }
+        }
+
+        async function refreshCurrentMap() {
+            const maps = await fetchMapsJSON();
+            showMapImage(maps[currentMapVersion] || '');
+            showToast('已刷新', 'success');
+        }
+
+        async function loadCurrentMap() {
+            const maps = await fetchMapsJSON();
+            showMapImage(maps[currentMapVersion] || '');
+        }
+
+        async function switchMapTab(tab) {
+            currentMapVersion = tab;
+            document.querySelectorAll('.map-tab').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === tab);
+            });
+            await loadCurrentMap();
+        }
+
+        async function handleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const ut = document.getElementById('uploadText');
+            if (ut) ut.style.display = 'inline';
+            try {
+                const fd = new FormData();
+                fd.append('image', file);
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: fd
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error?.message || '上传失败');
+                const imageUrl = data.data.url;
+                const ok = await updateMapsJSON(currentMapVersion, imageUrl);
+                if (ok) {
+                    showMapImage(imageUrl);
+                    showToast('✅ 上传成功！', 'success');
+                }
+            } catch (e) {
+                showToast('操作失败：' + e.message, 'error');
+                alert('操作失败：' + e.message);
+            } finally {
+                if (ut) ut.style.display = 'none';
+                event.target.value = '';
+            }
+        }
+
+        // ==================== 事件处理 ====================
+        document.addEventListener('click', e => {
+            if (e.target === document.getElementById('loginModal')) closeLoginModal();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeLoginModal();
+        });
+
+        let resizeTimeout = null;
+        window.addEventListener('resize', () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                const img = document.getElementById('mapImg');
+                const wrapper = document.getElementById('mapWrapper');
+                if (img && wrapper && img.naturalWidth && img.naturalHeight) {
+                    const natW = img.naturalWidth;
+                    const natH = img.naturalHeight;
+                    const ww = wrapper.clientWidth;
+                    const wh = wrapper.clientHeight;
+                    const scaleX = ww / natW;
+                    const scaleY = wh / natH;
+                    mapState[currentMapVersion].initScale = Math.min(scaleX, scaleY, 1);
+                    if (mapState[currentMapVersion].scale === mapState[currentMapVersion].initScale) {
+                        mapState[currentMapVersion].scale = mapState[currentMapVersion].initScale;
+                        applyTransform();
+                    }
+                }
+            }, 300);
+        });
+
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNavbar();
+            switchMapTab('dudu');
+        });
+
+        // 暴露全局函数
+        window.switchMapTab = switchMapTab;
+        window.refreshCurrentMap = refreshCurrentMap;
+        window.handleUpload = handleUpload;
+        window.downloadMapImage = downloadMapImage;
+        window.deleteCurrentMap = deleteCurrentMap;
+        window.openLoginModal = openLoginModal;
+        window.closeLoginModal = closeLoginModal;
+        window.handleLogin = handleLogin;
+        window.logout = logout;
+        window.checkLoginStatus = checkLoginStatus;
+        window.zoomMap = zoomMap;
+        window.resetZoom = resetZoom;
+        window.toggleDirectory = toggleDirectory;
+        window.closeDirectory = closeDirectory;
+    </script>
+</body>
+</html>
