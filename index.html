@@ -22,8 +22,8 @@
             --border: #D9D4E8;
             --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
-            --radius: 20px;
-            --radius-sm: 12px;
+            --radius: 16px;
+            --radius-sm: 10px;
             --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         * {
@@ -39,7 +39,7 @@
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            padding-top: 70px;
+            padding-top: 60px;
             -webkit-overflow-scrolling: touch;
         }
         body::before {
@@ -73,42 +73,42 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 70px;
+            height: 60px;
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 28px;
+            padding: 0 24px;
             z-index: 100;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
         }
         .navbar .nav-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             font-weight: 700;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             color: var(--text);
             text-decoration: none;
         }
         .navbar .nav-brand .nav-logo {
-            width: 38px;
-            height: 38px;
+            width: 34px;
+            height: 34px;
             background: var(--primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             color: white;
-            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+            box-shadow: 0 2px 8px rgba(142, 124, 195, 0.3);
         }
         .nav-actions {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             position: relative;
         }
         .nav-directory {
@@ -118,9 +118,9 @@
             background: var(--primary-light);
             border: 1.5px solid var(--primary);
             color: var(--primary-dark);
-            padding: 8px 16px;
+            padding: 6px 16px;
             font-size: 0.85rem;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
             transition: var(--transition);
@@ -133,7 +133,7 @@
             background: var(--primary);
             color: #fff;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+            box-shadow: 0 2px 8px rgba(142, 124, 195, 0.3);
         }
         .directory-dropdown {
             position: absolute;
@@ -181,32 +181,32 @@
             white-space: nowrap;
         }
         .nav-user-info .user-icon {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
         .btn-login {
             background: var(--primary);
             color: #fff;
-            padding: 8px 18px;
+            padding: 6px 16px;
             font-size: 0.85rem;
-            border-radius: 8px;
+            border-radius: 6px;
             border: none;
             cursor: pointer;
             font-weight: 600;
             transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.3);
+            box-shadow: 0 2px 8px rgba(142, 124, 195, 0.3);
         }
         .btn-login:hover {
             background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(142, 124, 195, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(142, 124, 195, 0.4);
         }
         .btn-logout {
             background: transparent;
             color: var(--danger);
-            padding: 8px 14px;
+            padding: 6px 12px;
             font-size: 0.8rem;
             border: 1.5px solid var(--danger);
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
             transition: var(--transition);
@@ -248,7 +248,7 @@
             transform: translate(-50%, -50%);
         }
         .header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--text);
             letter-spacing: -0.02em;
@@ -282,7 +282,7 @@
             background: var(--primary-light);
             border-color: var(--primary-dark);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(142, 124, 195, 0.2);
+            box-shadow: 0 2px 8px rgba(142, 124, 195, 0.2);
         }
 
         /* 主卡片 */
@@ -413,8 +413,8 @@
             color: var(--primary);
             font-weight: 600;
             font-size: 0.8rem;
-            padding: 6px 16px;
-            border-radius: 8px;
+            padding: 6px 14px;
+            border-radius: 6px;
             cursor: pointer;
             transition: var(--transition);
             display: flex;
@@ -514,7 +514,7 @@
             border: none;
             padding: 8px 18px;
             font-size: 0.85rem;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
             transition: var(--transition);
@@ -534,7 +534,7 @@
             border: 1.5px solid #F5C6CB;
             padding: 8px 18px;
             font-size: 0.85rem;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
             transition: var(--transition);
@@ -553,12 +553,12 @@
         /* Toast 提示 */
         .map-toast {
             position: fixed;
-            top: 80px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
             background: #2D2A3A;
             color: #fff;
-            padding: 12px 26px;
+            padding: 10px 24px;
             border-radius: 30px;
             font-size: 0.9rem;
             z-index: 2000;
@@ -676,7 +676,7 @@
         .form-group-login input[type="text"],
         .form-group-login input[type="password"] {
             width: 100%;
-            padding: 11px 14px;
+            padding: 10px 14px;
             border: 2px solid var(--border);
             border-radius: var(--radius-sm);
             font-size: 0.95rem;
@@ -704,7 +704,7 @@
             background: var(--primary);
             color: #fff;
             border: none;
-            padding: 12px 22px;
+            padding: 11px 22px;
             font-size: 0.95rem;
             border-radius: var(--radius-sm);
             cursor: pointer;
@@ -744,7 +744,7 @@
         /* 页脚 */
         .footer-note {
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             color: #A0A0B0;
             margin-top: 20px;
             letter-spacing: 0.02em;
@@ -757,22 +757,20 @@
             }
             .main-card {
                 padding: 16px 14px;
-                border-radius: 16px;
+                border-radius: 12px;
             }
             .map-image-wrapper {
                 height: 320px;
             }
             .navbar {
-                padding: 0 14px;
-                flex-wrap: wrap;
-                height: auto;
-                min-height: 60px;
+                padding: 0 12px;
+                height: 60px;
             }
             .navbar .nav-brand {
                 font-size: 0.95rem;
             }
             .header h1 {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
             }
             .modal-content {
                 padding: 20px 16px;
